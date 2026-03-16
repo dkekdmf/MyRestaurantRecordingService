@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>맛집 목록</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #f9f9f9; }
+        h1 { color: #d35400; }
+        .restaurant-card {
+          background: #fff; border: 1px solid #ddd; border-radius: 8px;
+          padding: 15px; margin-bottom: 15px;
+        }
+        .restaurant-card img { max-width: 200px; border-radius: 5px; margin-top: 10px; }
+        button { margin-top: 10px; padding: 8px 12px; background: #d35400; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #e67e22; }
+    </style>
+</head>
+<body>
+<h1>🍴 맛집 목록</h1>
+<div id="restaurantList"></div>
+
+<script>
+    const API_URL = "http://localhost:8080/restaurant/all";
+
+    async function loadRestaurants() {
+      const res = await fetch(API_URL);
+      const restaurants = await res.json();
+      const listDiv = document.getElementById("restaurantList");
+      listDiv.innerHTML = "";
+
+      restaurants.forEach(r => {
+        const card = document.createElement("div");
+        card.className = "restaurant-card";
+        card.innerHTML = `
+          <h3>${r.name} (${r.category})</h3>
+          <p>위치: ${r.location}</p>
+          <p>평점: ${r.rating}</p>
+          <p>리뷰: ${r.review}</p>
+          <p>방문일: ${r.visitDate || ''}</p>
+          ${r.imgUrl ? `<img src="${r.imgUrl}" alt="맛집 이미지">` : ""}
+          <button onclick="deleteRestaurant(${r.id})">삭제</button>
+          <button onclick="goToUpdate(${r.id})">수정하기</button>
+        `;
+        listDiv.appendChild(card);
+      });
+    }
+
+    async function deleteRestaurant(id) {
+      if (!confirm("정말 삭제하시겠습니까?")) return;
+      await fetch(`http://localhost:8080/restaurant/${id}`, { method: "DELETE" });
+      alert("삭제 성공!");
+      loadRestaurants();
+    }
+
+    function goToUpdate(id) {
+      // updateRestaurant.html로 이동하면서 id 전달
+      window.location.href = `updateRestaurant.html?id=${id}`;
+    }
+
+    loadRestaurants();
+</script>
+</body>
+</html>
