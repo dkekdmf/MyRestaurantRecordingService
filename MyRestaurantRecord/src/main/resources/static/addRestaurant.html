@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>맛집 등록</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #f9f9f9; }
+        h1 { color: #d35400; }
+        form { padding: 15px; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
+        input, textarea { display: block; margin: 8px 0; padding: 8px; width: 300px; }
+        .btn-group { margin-top: 10px; }
+        button { padding: 8px 15px; background: #d35400; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px; }
+        button:hover { background: #e67e22; }
+    </style>
+</head>
+<body>
+<h1>🍴 맛집 등록</h1>
+<form id="restaurantForm">
+    <input type="text" id="name" placeholder="맛집 이름" required />
+    <input type="text" id="location" placeholder="위치" required />
+    <input type="text" id="category" placeholder="카테고리" />
+    <input type="number" id="rating" placeholder="평점 (0~5)" step="0.1" />
+    <textarea id="review" placeholder="리뷰"></textarea>
+    <input type="date" id="visitDate" />
+    <input type="text" id="imgUrl" placeholder="이미지 URL" />
+
+    <!-- 버튼 그룹 -->
+    <div class="btn-group">
+        <button type="submit">등록하기</button>
+        <button type="button" onclick="goToList()">조회하기</button>
+    </div>
+</form>
+
+<script>
+    const API_URL = "http://localhost:8080/restaurant/add/1"; // userId=1 예시
+
+    document.getElementById("restaurantForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const newRestaurant = {
+        name: document.getElementById("name").value,
+        location: document.getElementById("location").value,
+        category: document.getElementById("category").value,
+        rating: document.getElementById("rating").value,
+        review: document.getElementById("review").value,
+        visitDate: document.getElementById("visitDate").value,
+        imgUrl: document.getElementById("imgUrl").value
+      };
+      await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newRestaurant)
+      });
+      alert("맛집 등록 성공!");
+      e.target.reset();
+    });
+
+    // 조회 페이지로 이동
+    function goToList() {
+      window.location.href = "restaurant.html";
+    }
+</script>
+</body>
+</html>

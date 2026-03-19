@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>맛집 기록 수정</title>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          background: #f9f9f9;
+        }
+
+        .container {
+          max-width: 500px;
+          margin: 80px auto;
+          padding: 30px;
+          background: white;
+          border-radius: 10px;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+          text-align: center;
+          margin-bottom: 20px;
+        }
+
+        label {
+          display: block;
+          margin-top: 10px;
+          font-weight: bold;
+        }
+
+        input, textarea {
+          width: 100%;
+          padding: 12px;
+          margin-top: 5px;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+        }
+
+        button {
+          width: 100%;
+          padding: 12px;
+          margin-top: 20px;
+          background: #007bff;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+        }
+
+        button:hover {
+          background: #0056b3;
+        }
+
+        .message {
+          margin-top: 15px;
+          text-align: center;
+          font-weight: bold;
+          color: green;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>맛집 기록 수정</h1>
+    <form id="updateForm">
+        <input type="hidden" id="id" name="id" value="1"> <!-- 수정할 맛집 ID -->
+
+        <label for="name">맛집 이름</label>
+        <input type="text" id="name" name="name" value="기존 이름" required>
+
+        <label for="location">위치</label>
+        <input type="text" id="location" name="location" value="기존 위치" required>
+
+        <label for="description">설명</label>
+        <textarea id="description" name="description" rows="4">기존 설명</textarea>
+
+        <button type="submit">수정하기</button>
+    </form>
+    <div class="message" id="message"></div>
+</div>
+
+<script>
+    document.getElementById("updateForm").addEventListener("submit", async function(event) {
+      event.preventDefault(); // 기본 폼 제출 막기
+
+      const data = {
+        id: document.getElementById("id").value,
+        name: document.getElementById("name").value,
+        location: document.getElementById("location").value,
+        description: document.getElementById("description").value
+      };
+
+      try {
+        const response = await fetch("/restaurants/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          document.getElementById("message").textContent = "맛집 기록이 성공적으로 수정되었습니다!";
+        } else {
+          document.getElementById("message").textContent = "수정 실패: 서버 오류";
+          document.getElementById("message").style.color = "red";
+        }
+      } catch (error) {
+        document.getElementById("message").textContent = "네트워크 오류 발생";
+        document.getElementById("message").style.color = "red";
+      }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>회원가입</title>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          background: #f9f9f9;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+        }
+        .container {
+          background: #fff;
+          padding: 30px;
+          border-radius: 10px;
+          box-shadow: 0 0 10px #ccc;
+          width: 320px;
+        }
+        h2 { text-align: center; color: #d35400; }
+        input, button {
+          width: 100%; padding: 10px; margin: 8px 0;
+          border-radius: 5px; border: 1px solid #ddd;
+        }
+        button {
+          background: #d35400; color: white; border: none; cursor: pointer;
+        }
+        button:hover { background: #e67e22; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>회원가입</h2>
+    <form id="signupForm">
+        <input type="text" id="username" placeholder="아이디" required />
+        <input type="text" id="nickname" placeholder="닉네임" required />
+        <input type="email" id="email" placeholder="이메일" required />
+        <input type="password" id="password" placeholder="비밀번호" required />
+        <button type="submit">가입하기</button>
+    </form>
+</div>
+
+<script>
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const user = {
+        username: document.getElementById("username").value,
+        nickname: document.getElementById("nickname").value,
+        email: document.getElementById("email").value,
+        password: document.getElementById("password").value
+      };
+
+      const res = await fetch("/api/users/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(user)
+      });
+
+      const message = await res.text();
+      alert(message);
+
+      if (message.includes("성공")) {
+        window.location.href = "/login.html"; // 회원가입 성공 시 로그인 페이지로 이동
+      }
+    });
+</script>
+</body>
+</html>
