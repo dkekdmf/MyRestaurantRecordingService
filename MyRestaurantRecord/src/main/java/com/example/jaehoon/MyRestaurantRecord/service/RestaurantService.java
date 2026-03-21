@@ -5,6 +5,7 @@ import com.example.jaehoon.MyRestaurantRecord.entity.User;
 import com.example.jaehoon.MyRestaurantRecord.repository.RestaurantRepository;
 import com.example.jaehoon.MyRestaurantRecord.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -34,9 +35,16 @@ public class RestaurantService {
     public List<Restaurant> getRestaurantsByCategory(String category) {
         return restaurantRepository.findByCategory(category);
     }
-    public Restaurant updateRestaurant(Long id, Restaurant restaurant) {
+    @Transactional
+    public Restaurant updateRestaurant(Long id, Restaurant restaurant,Long userId) {
         Restaurant existing = restaurantRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("맛집을 찾을 수 없습니다."));
+        if(existing.getUser() == null){
+            throw new RuntimeException("해당 게시글에 작성자 정보가 없습니다.");
+        }
+        if(!existing.getUser().getId().equals(userId)){
+            throw new RuntimeException("본인 기록만 수정할 수 있습니다.");
+        }
         existing.setName(restaurant.getName());
         existing.setLocation(restaurant.getLocation());
         existing.setCategory(restaurant.getCategory());
@@ -46,10 +54,17 @@ public class RestaurantService {
         existing.setImgUrl(restaurant.getImgUrl());
         return restaurantRepository.save(existing);
     }
+    @Transactional
+    public void deleteRestaurant(Long restaurantId, Long userId) {
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+                .orElseThrow(()-> new RuntimeException("존재하지 않는 맛집입니다."));
 
-    public void deleteRestaurant(Long id) {
-        restaurantRepository.deleteById(id);
+        if(!restaurant.getUser().getId().equals(userId)){
+            throw new RuntimeException("삭제 권한이 없습니다.");
+        }
+        restaurantRepository.delete(restaurant);
     }
+
 
 
 }

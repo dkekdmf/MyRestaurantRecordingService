@@ -21,7 +21,7 @@ public class Restaurant {
     private String name;        // 맛집 이름
     private String location;    // 위치
     private String category;    // 음식 종류
-    private int rating;         // 평점
+    private Double rating;         // 평점
     private String review;      // 리뷰
     private LocalDate visitDate; // 방문 날짜
     private String imgUrl; //이미지 업로드

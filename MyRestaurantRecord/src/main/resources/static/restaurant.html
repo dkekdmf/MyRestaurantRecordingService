@@ -2,61 +2,107 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>맛집 목록</title>
+    <title>내 맛집 목록</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 30px; background: #f9f9f9; }
+        body { font-family: 'Malgun Gothic', sans-serif; margin: 30px; background: #f9f9f9; }
+        .header-container { display: flex; justify-content: space-between; align-items: center; }
         h1 { color: #d35400; }
         .restaurant-card {
-          background: #fff; border: 1px solid #ddd; border-radius: 8px;
-          padding: 15px; margin-bottom: 15px;
+          background: #fff; border: 1px solid #ddd; border-radius: 10px;
+          padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-        .restaurant-card img { max-width: 200px; border-radius: 5px; margin-top: 10px; }
-        button { margin-top: 10px; padding: 8px 12px; background: #d35400; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
-        button:hover { background: #e67e22; }
+        .restaurant-card h3 { margin-top: 0; color: #2c3e50; }
+        .restaurant-card img { max-width: 300px; border-radius: 8px; margin: 10px 0; display: block; }
+        .btn-group { margin-top: 15px; }
+        button { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-delete { background: #e74c3c; color: white; margin-right: 5px; }
+        .btn-update { background: #3498db; color: white; }
+        .btn-add { background: #27ae60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
+        button:hover { opacity: 0.8; }
     </style>
 </head>
 <body>
-<h1>🍴 맛집 목록</h1>
-<div id="restaurantList"></div>
+
+<div class="header-container">
+    <h1>🍴 나의 맛집 기록</h1>
+    <a href="addRestaurant.html" class="btn-add">새 맛집 등록</a>
+</div>
+
+<div id="restaurantList">
+    <p>로딩 중...</p>
+</div>
 
 <script>
-    const API_URL = "http://localhost:8080/restaurant/all";
+
+    const API_URL = "http://localhost:8080/restaurant/my";
 
     async function loadRestaurants() {
-      const res = await fetch(API_URL);
-      const restaurants = await res.json();
-      const listDiv = document.getElementById("restaurantList");
-      listDiv.innerHTML = "";
+      try {
+        const res = await fetch(API_URL);
 
-      restaurants.forEach(r => {
-        const card = document.createElement("div");
-        card.className = "restaurant-card";
-        card.innerHTML = `
-          <h3>${r.name} (${r.category})</h3>
-          <p>위치: ${r.location}</p>
-          <p>평점: ${r.rating}</p>
-          <p>리뷰: ${r.review}</p>
-          <p>방문일: ${r.visitDate || ''}</p>
-          ${r.imgUrl ? `<img src="${r.imgUrl}" alt="맛집 이미지">` : ""}
-          <button onclick="deleteRestaurant(${r.id})">삭제</button>
-          <button onclick="goToUpdate(${r.id})">수정하기</button>
-        `;
-        listDiv.appendChild(card);
-      });
+        // 로그인 안 된 경우 처리
+        if (res.status === 401) {
+          alert("로그인이 필요한 서비스입니다.");
+          window.location.href = "로그인.html";
+          return;
+        }
+
+        const restaurants = await res.json();
+        const listDiv = document.getElementById("restaurantList");
+        listDiv.innerHTML = "";
+
+        if (restaurants.length === 0) {
+          listDiv.innerHTML = "<p>아직 등록된 맛집이 없습니다. 첫 맛집을 등록해보세요!</p>";
+          return;
+        }
+
+        restaurants.forEach(r => {
+          const card = document.createElement("div");
+          card.className = "restaurant-card";
+          card.innerHTML = `
+            <h3>${r.name} <span style="font-size: 0.8em; color: #7f8c8d;">[${r.category || '기타'}]</span></h3>
+            <p>📍 위치: ${r.location}</p>
+            <p>⭐ 평점: ${r.rating} / 5.0</p>
+            <p>📝 리뷰: ${r.review || '내용 없음'}</p>
+            <p>📅 방문일: ${r.visitDate || '기록 없음'}</p>
+            ${r.imgUrl ? `<img src="${r.imgUrl}" alt="맛집 이미지">` : ""}
+            <div class="btn-group">
+              <button class="btn-update" onclick="goToUpdate(${r.id})">수정</button>
+              <button class="btn-delete" onclick="deleteRestaurant(${r.id})">삭제</button>
+            </div>
+          `;
+          listDiv.appendChild(card);
+        });
+      } catch (error) {
+        console.error("데이터 로드 실패:", error);
+        document.getElementById("restaurantList").innerHTML = "<p>데이터를 불러오는 중 오류가 발생했습니다.</p>";
+      }
     }
 
     async function deleteRestaurant(id) {
       if (!confirm("정말 삭제하시겠습니까?")) return;
-      await fetch(`http://localhost:8080/restaurant/${id}`, { method: "DELETE" });
-      alert("삭제 성공!");
-      loadRestaurants();
+
+      try {
+        const res = await fetch(`http://localhost:8080/restaurant/${id}`, {
+          method: "DELETE"
+        });
+
+        if (res.ok) {
+          alert("삭제되었습니다.");
+          loadRestaurants(); // 목록 새로고침
+        } else {
+          alert("삭제 권한이 없거나 오류가 발생했습니다.");
+        }
+      } catch (error) {
+        alert("서버 통신 오류");
+      }
     }
 
     function goToUpdate(id) {
-      // updateRestaurant.html로 이동하면서 id 전달
       window.location.href = `updateRestaurant.html?id=${id}`;
     }
 
+    // 페이지 로드 시 실행
     loadRestaurants();
 </script>
 </body>

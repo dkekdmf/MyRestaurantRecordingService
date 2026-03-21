@@ -4,6 +4,7 @@ package com.example.jaehoon.MyRestaurantRecord.controller;
 import com.example.jaehoon.MyRestaurantRecord.dto.UserDto;
 import com.example.jaehoon.MyRestaurantRecord.entity.User;
 import com.example.jaehoon.MyRestaurantRecord.repository.UserRepository;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -42,7 +43,7 @@ public class UserContorller {
         return ResponseEntity.ok("회원가입 성공");
     }
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody Map<String, String> request) {
+    public ResponseEntity<String> login(@RequestBody Map<String, String> request, HttpSession session) {
         String username = request.get("username");
         String password = request.get("password");
 
@@ -57,6 +58,8 @@ public class UserContorller {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("비밀번호가 틀렸습니다.");
         }
+        session.setAttribute("userId",user.getId());
+        session.setAttribute("userNickname",user.getNickname());
 
         return ResponseEntity.ok("로그인 성공");
     }

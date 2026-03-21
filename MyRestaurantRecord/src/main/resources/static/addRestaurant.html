@@ -4,38 +4,43 @@
     <meta charset="UTF-8">
     <title>맛집 등록</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 30px; background: #f9f9f9; }
-        h1 { color: #d35400; }
-        form { padding: 15px; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
-        input, textarea { display: block; margin: 8px 0; padding: 8px; width: 300px; }
-        .btn-group { margin-top: 10px; }
-        button { padding: 8px 15px; background: #d35400; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px; }
-        button:hover { background: #e67e22; }
+        body { font-family: 'Malgun Gothic', sans-serif; margin: 30px; background: #f9f9f9; }
+        .container { max-width: 400px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { color: #d35400; text-align: center; }
+        input, textarea { display: block; margin: 10px 0; padding: 10px; width: 100%; box-sizing: border-box; border: 1px solid #ddd; border-radius: 5px; }
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-submit { background: #d35400; color: white; }
+        .btn-list { background: #7f8c8d; color: white; }
+        button:hover { opacity: 0.9; }
     </style>
 </head>
 <body>
-<h1>🍴 맛집 등록</h1>
-<form id="restaurantForm">
-    <input type="text" id="name" placeholder="맛집 이름" required />
-    <input type="text" id="location" placeholder="위치" required />
-    <input type="text" id="category" placeholder="카테고리" />
-    <input type="number" id="rating" placeholder="평점 (0~5)" step="0.1" />
-    <textarea id="review" placeholder="리뷰"></textarea>
-    <input type="date" id="visitDate" />
-    <input type="text" id="imgUrl" placeholder="이미지 URL" />
+<div class="container">
+    <h1>🍴 맛집 등록</h1>
+    <form id="restaurantForm">
+        <input type="text" id="name" placeholder="맛집 이름 (예: 중앙해장)" required />
+        <input type="text" id="location" placeholder="위치 (예: 삼성동)" required />
+        <input type="text" id="category" placeholder="카테고리 (예: 한식)" />
+        <input type="number" id="rating" placeholder="평점 (0~5)" step="0.1" min="0" max="5" />
+        <textarea id="review" placeholder="맛은 어땠나요?"></textarea>
+        <input type="date" id="visitDate" />
+        <input type="text" id="imgUrl" placeholder="이미지 URL" />
 
-    <!-- 버튼 그룹 -->
-    <div class="btn-group">
-        <button type="submit">등록하기</button>
-        <button type="button" onclick="goToList()">조회하기</button>
-    </div>
-</form>
+        <div class="btn-group">
+            <button type="submit" class="btn-submit">등록하기</button>
+            <button type="button" class="btn-list" onclick="goToList()">내 리스트 보기</button>
+        </div>
+    </form>
+</div>
 
 <script>
-    const API_URL = "http://localhost:8080/restaurant/add/1"; // userId=1 예시
+    // [수정] URL에서 userId 제거 -> 서버 세션을 활용함
+    const API_URL = "http://localhost:8080/restaurant/add";
 
     document.getElementById("restaurantForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+
       const newRestaurant = {
         name: document.getElementById("name").value,
         location: document.getElementById("location").value,
@@ -45,17 +50,32 @@
         visitDate: document.getElementById("visitDate").value,
         imgUrl: document.getElementById("imgUrl").value
       };
-      await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newRestaurant)
-      });
-      alert("맛집 등록 성공!");
-      e.target.reset();
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newRestaurant)
+        });
+
+        if (res.ok) {
+          alert("성공적으로 등록되었습니다! 😋");
+          e.target.reset(); // 폼 초기화
+        } else if (res.status === 401) {
+          alert("로그인이 만료되었습니다. 다시 로그인해주세요.");
+          window.location.href = "로그인.html"; // 로그인 페이지로 리다이렉트
+        } else {
+          const errorMsg = await res.text();
+          alert("등록 실패: " + errorMsg);
+        }
+      } catch (error) {
+        console.error("에러 발생:", error);
+        alert("서버와 통신 중 오류가 발생했습니다.");
+      }
     });
 
-    // 조회 페이지로 이동
     function goToList() {
+      // 내 맛집만 보여주는 페이지(만드실 예정인 페이지)로 이동
       window.location.href = "restaurant.html";
     }
 </script>
