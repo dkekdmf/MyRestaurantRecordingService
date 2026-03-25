@@ -1,19 +1,35 @@
 package com.example.jaehoon.MyRestaurantRecord.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.GenerationType;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import org.springframework.boot.jdbc.DataSourceBuilder;
+
+import javax.sql.DataSource;
 
 
 @Entity
 @Table(name = "users")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id// 기본키지정
+    @GeneratedValue(strategy = GenerationType.IDENTITY) //기본키를 자동으로 생성
     private long id;
 
     private String username;
     private String password;
     private String email;
     private String nickname;
+
+
+
     public Long getId(){
         return id;
     }
