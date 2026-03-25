@@ -4,68 +4,107 @@
     <meta charset="UTF-8">
     <title>맛집 등록</title>
     <style>
-        body { font-family: 'Malgun Gothic', sans-serif; margin: 30px; background: #f9f9f9; }
-        .container { max-width: 400px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h1 { color: #d35400; text-align: center; }
-        input, textarea { display: block; margin: 10px 0; padding: 10px; width: 100%; box-sizing: border-box; border: 1px solid #ddd; border-radius: 5px; }
-        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-submit { background: #d35400; color: white; }
-        .btn-list { background: #7f8c8d; color: white; }
-        button:hover { opacity: 0.9; }
+        /* 간단한 스타일링 */
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input, textarea, button { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; margin-top: 20px; }
+        .btn-list { background: #6c757d; }
+        #previewImg { max-width: 100%; margin-top: 10px; display: none; border-radius: 5px; }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>🍴 맛집 등록</h1>
-    <form id="restaurantForm">
-        <input type="text" id="name" placeholder="맛집 이름 (예: 중앙해장)" required />
-        <input type="text" id="location" placeholder="위치 (예: 삼성동)" required />
-        <input type="text" id="category" placeholder="카테고리 (예: 한식)" />
-        <input type="number" id="rating" placeholder="평점 (0~5)" step="0.1" min="0" max="5" />
-        <textarea id="review" placeholder="맛은 어땠나요?"></textarea>
-        <input type="date" id="visitDate" />
-        <input type="text" id="imgUrl" placeholder="이미지 URL" />
 
-        <div class="btn-group">
-            <button type="submit" class="btn-submit">등록하기</button>
-            <button type="button" class="btn-list" onclick="goToList()">내 리스트 보기</button>
-        </div>
+<div class="container">
+    <h1>😋 맛집 등록하기</h1>
+    <form id="restaurantForm">
+        <label for="name">맛집 이름</label>
+        <input type="text" id="name" required>
+
+        <label for="location">위치</label>
+        <input type="text" id="location" required>
+
+        <label for="category">카테고리</label>
+        <input type="text" id="category" placeholder="예: 한식, 일식">
+
+        <label for="rating">평점 (0~5)</label>
+        <input type="number" id="rating" step="0.1" min="0" max="5">
+
+        <label for="visitDate">방문일</label>
+        <input type="date" id="visitDate">
+
+        <label for="review">리뷰</label>
+        <textarea id="review" rows="3"></textarea>
+
+        <label for="imageFile">맛집 사진 올리기</label>
+        <input type="file" id="imageFile" accept="image/*">
+        <img id="previewImg" src="" alt="미리보기">
+
+        <button type="submit">등록하기</button>
+        <button type="button" class="btn-list" onclick="goToList()">내 리스트 보기</button>
     </form>
 </div>
 
 <script>
-    // [수정] URL에서 userId 제거 -> 서버 세션을 활용함
     const API_URL = "http://localhost:8080/restaurant/add";
+
+    // 사진 선택 시 미리보기 기능
+    document.getElementById("imageFile").addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = document.getElementById("previewImg");
+                img.src = event.target.result;
+                img.style.display = "block";
+            };
+            reader.readAsDataURL(file);
+        }
+    });
 
     document.getElementById("restaurantForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
+      // [핵심] FormData 객체 생성
+      const formData = new FormData();
+
+      // 1. 텍스트 데이터를 객체로 생성
       const newRestaurant = {
         name: document.getElementById("name").value,
         location: document.getElementById("location").value,
         category: document.getElementById("category").value,
         rating: document.getElementById("rating").value,
         review: document.getElementById("review").value,
-        visitDate: document.getElementById("visitDate").value,
-        imgUrl: document.getElementById("imgUrl").value
+        visitDate: document.getElementById("visitDate").value
       };
+
+      // 2. JSON 데이터를 Blob으로 추가 (서버의 @RequestPart("restaurant")와 매칭)
+      formData.append("restaurant", new Blob([JSON.stringify(newRestaurant)], {
+        type: "application/json"
+      }));
+
+      // 3. 파일 데이터를 추가 (서버의 @RequestPart("image")와 매칭)
+      const fileInput = document.getElementById("imageFile");
+      if (fileInput.files[0]) {
+        formData.append("image", fileInput.files[0]);
+      }
 
       try {
         const res = await fetch(API_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newRestaurant)
+
+          body: formData
         });
 
         if (res.ok) {
           alert("성공적으로 등록되었습니다! 😋");
-          e.target.reset(); // 폼 초기화
+          window.location.href = "restaurant.html"; // 등록 후 리스트로 이동
         } else if (res.status === 401) {
           alert("로그인이 만료되었습니다. 다시 로그인해주세요.");
-          window.location.href = "로그인.html"; // 로그인 페이지로 리다이렉트
+          window.location.href = "login.html";
         } else {
-          const errorMsg = await res.text();
+          const errorMsg = await response.text();
           alert("등록 실패: " + errorMsg);
         }
       } catch (error) {
@@ -75,7 +114,6 @@
     });
 
     function goToList() {
-      // 내 맛집만 보여주는 페이지(만드실 예정인 페이지)로 이동
       window.location.href = "restaurant.html";
     }
 </script>

@@ -43,7 +43,7 @@
         // 로그인 안 된 경우 처리
         if (res.status === 401) {
           alert("로그인이 필요한 서비스입니다.");
-          window.location.href = "로그인.html";
+          window.location.href = "login.html";
           return;
         }
 
@@ -65,7 +65,7 @@
             <p>⭐ 평점: ${r.rating} / 5.0</p>
             <p>📝 리뷰: ${r.review || '내용 없음'}</p>
             <p>📅 방문일: ${r.visitDate || '기록 없음'}</p>
-            ${r.imgUrl ? `<img src="${r.imgUrl}" alt="맛집 이미지">` : ""}
+            ${r.imgUrl ? `<img src="http://localhost:8080${r.imgUrl}" alt="맛집 이미지">` : ""}
             <div class="btn-group">
               <button class="btn-update" onclick="goToUpdate(${r.id})">수정</button>
               <button class="btn-delete" onclick="deleteRestaurant(${r.id})">삭제</button>
@@ -99,7 +99,7 @@
     }
 
     function goToUpdate(id) {
-      window.location.href = `updateRestaurant.html?id=${id}`;
+      window.location.href = `updaterestaurant.html?id=${id}`;
     }
 
     // 페이지 로드 시 실행

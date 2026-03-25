@@ -84,48 +84,88 @@
         <label for="visitDate">방문일</label>
         <input type="date" id="visitDate">
 
-        <label for="imgUrl">이미지 URL</label>
-        <input type="text" id="imgUrl">
+        <label for="imgFile">이미지 업로드</label>
+        <input type="file" id="imgFile" accept ="image/*">
 
         <button type="submit">수정하기</button>
     </form>
     <div class="message" id="message"></div>
 </div>
 <script>
+    // 1. URL 파라미터에서 id 추출 (예: ?id=123)
     const urlParams = new URLSearchParams(window.location.search);
     const restaurantId = urlParams.get('id');
 
-    document.getElementById("updateForm").addEventListener("submit", async function(event) {
-      event.preventDefault();
-
-      const data = {
-        name: document.getElementById("name").value,
-        location: document.getElementById("location").value,
-        category: document.getElementById("category").value,
-        rating: parseFloat(document.getElementById("rating").value) || 0,
-        review: document.getElementById("review").value,      // 서버 엔티티의 review 필드와 매칭
-        visitDate: document.getElementById("visitDate").value,
-        imgUrl: document.getElementById("imgUrl").value
-      };
-
-      try {
-        const response = await fetch(`/restaurant/${restaurantId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        });
-
-        if (response.ok) {
-          document.getElementById("message").textContent = "수정 완료! 잠시 후 목록으로 이동합니다.";
-          document.getElementById("message").style.color = "green";
-          setTimeout(() => { window.location.href = "/restaurant.html"; }, 1500);
-        } else {
-          const errorMsg = await response.text();
-          alert("수정 실패: " + errorMsg);
+    // 페이지 로드 시 기존 데이터 불러오기 (선택 사항이지만 권장)
+    async function fetchOriginalData() {
+        if (!restaurantId) {
+            alert("수정할 대상이 없습니다.");
+            return;
         }
-      } catch (error) {
-        alert("네트워크 오류가 발생했습니다.");
-      }
+        try {
+            // 이 경로는 본인의 상세조회 API 주소에 맞춰주세요
+            const res = await fetch(`http://localhost:8080/restaurant/${restaurantId}`);
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById("name").value = data.name;
+                document.getElementById("location").value = data.location;
+                document.getElementById("category").value = data.category || "";
+                document.getElementById("rating").value = data.rating || 0;
+                document.getElementById("review").value = data.review || "";
+                document.getElementById("visitDate").value = data.visitDate || "";
+            }
+        } catch (e) {
+            console.error("데이터 로드 실패", e);
+        }
+    }
+    fetchOriginalData();
+
+    // 2. 수정 폼 제출 이벤트
+    document.getElementById("updateForm").addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        if (!restaurantId) {
+            alert("ID가 없습니다. 다시 시도해주세요.");
+            return;
+        }
+
+        const formData = new FormData();
+
+        // JSON 데이터 생성 (카테고리, 평점 등 누락된 필드 추가)
+        const restaurantData = {
+            name: document.getElementById("name").value,
+            location: document.getElementById("location").value,
+            category: document.getElementById("category").value,
+            rating: document.getElementById("rating").value,
+            review: document.getElementById("review").value,
+            visitDate: document.getElementById("visitDate").value
+        };
+
+        // Blob으로 감싸서 전송 (Spring의 @RequestPart와 매칭)
+        formData.append("restaurant", new Blob([JSON.stringify(restaurantData)], { type: "application/json" }));
+
+        const fileInput = document.getElementById("imgFile");
+        if (fileInput.files[0]) {
+            formData.append("image", fileInput.files[0]);
+        }
+
+        try {
+            const response = await fetch(`http://localhost:8080/restaurant/${restaurantId}`, {
+                method: "PUT",
+                body: formData
+            });
+
+            if (response.ok) {
+                alert("수정이 완료되었습니다!");
+                window.location.href = "restaurant.html"; // 목록 페이지로 이동 (파일명 확인 필요)
+            } else {
+                const errorText = await response.text();
+                alert("수정 실패: " + errorText);
+            }
+        } catch (error) {
+            console.error("통신 에러:", error);
+            alert("서버와 통신 중 에러가 발생했습니다.");
+        }
     });
 </script>
 </body>
