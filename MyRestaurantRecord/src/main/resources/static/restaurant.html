@@ -2,167 +2,152 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>나의 맛집 기록</title>
     <style>
-        /* CSS 영역 */
+        /* 기본 레이아웃 */
         body { font-family: 'Malgun Gothic', sans-serif; margin: 30px; background: #f9f9f9; color: #333; }
-        .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        h1 { color: #d35400; margin: 0; font-size: 28px; }
+        .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #d35400; padding-bottom: 15px; }
+
+        .user-info h1 { color: #d35400; margin: 0; font-size: 26px; }
+       .nickname-text {
+            font-size: 20px; /* 기존 14px -> 20px로 확대 */
+            color: #e67e22;  /* 맛집 테마색(오렌지) 적용 */
+            margin-top: 10px;
+            font-weight: 800; /* 아주 굵게 설정 */
+            letter-spacing: -0.5px; /* 글자 간격을 좁혀 가독성 향상 */
+        }
 
         .control-panel { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; }
         .search-bar { display: flex; gap: 10px; margin-bottom: 20px; }
-        .search-bar input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+        .search-bar input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; outline: none; }
 
-        /* 카테고리 버튼 스타일 */
-        .category-group { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-        .category-label { font-weight: bold; font-size: 14px; color: #7f8c8d; margin-right: 5px; }
-        .btn-cat { background: #f1f2f6; border: 1px solid #dfe4ea; padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: 0.2s; font-size: 14px; }
-        .btn-cat:hover { background: #d35400; color: white; border-color: #d35400; }
+        /* 카테고리 버튼 */
+        .category-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .btn-cat { background: #f1f2f6; border: 1px solid #dfe4ea; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 13px; transition: 0.2s; }
         .btn-cat.active { background: #d35400; color: white; border-color: #d35400; font-weight: bold; }
 
-        /* 맛집 카드 스타일 */
-        #restaurantList { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .restaurant-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #eee; transition: transform 0.2s; }
-        .restaurant-card:hover { transform: translateY(-5px); }
-        .restaurant-card h3 { margin: 0 0 10px 0; color: #2c3e50; display: flex; justify-content: space-between; align-items: center; }
-        .cat-tag { font-size: 12px; background: #ffeaa7; color: #d35400; padding: 2px 8px; border-radius: 4px; }
-        .restaurant-card img { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin: 15px 0; background: #eee; }
+        /* 맛집 카드 그리드 */
+        #restaurantList { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
 
-        .info { font-size: 14px; margin: 5px 0; color: #636e72; }
+        /* 카드 디자인 및 호버 효과 */
+        .restaurant-card {
+            background: #fff; border-radius: 12px; padding: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #eee;
+            display: flex; flex-direction: column; min-height: 440px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .restaurant-card:hover { transform: translateY(-8px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); border-color: #d35400; }
+
+        .restaurant-card h3 { margin: 0 0 8px 0; color: #2c3e50; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
+        .cat-tag { font-size: 11px; background: #ffeaa7; color: #d35400; padding: 2px 6px; border-radius: 4px; }
+
+        .card-img, .no-image-box { width: 100%; height: 160px; object-fit: cover; border-radius: 8px; margin: 12px 0; }
+        .no-image-box { background: #f1f2f6; display: flex; align-items: center; justify-content: center; color: #adb5bd; font-size: 13px; border: 1px dashed #dee2e6; }
+
+        .info { font-size: 13px; margin: 3px 0; color: #636e72; }
         .rating { color: #f1c40f; font-weight: bold; }
+        .review-text { font-size: 13px; margin-top: 8px; color: #2d3436; flex-grow: 1; line-height: 1.5; }
 
-        /* 공통 버튼 */
-        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        /* 버튼 그룹 */
+        .btn-group { display: flex; gap: 8px; margin-top: auto; padding-top: 15px; }
         button { border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-main { background: #d35400; color: white; padding: 10px 20px; }
-        .btn-add { background: #27ae60; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; }
-        .btn-edit { background: #3498db; color: white; flex: 1; padding: 8px; }
-        .btn-del { background: #e74c3c; color: white; flex: 1; padding: 8px; }
-        button:active { opacity: 0.7; }
+        .btn-add { background: #27ae60; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; }
+        .btn-edit { background: #3498db; color: white; flex: 1; padding: 8px; font-size: 13px; }
+        .btn-del { background: #f1f2f6; color: #e74c3c; border: 1px solid #fab1a0; flex: 1; padding: 8px; font-size: 13px; }
     </style>
 </head>
 <body>
 
 <div class="header-container">
-    <h1>🍴 나의 맛집 기록</h1>
+    <div class="user-box">
+        <h1>🍴 나의 맛집 기록</h1>
+        <div id="nicknameArea" class="nickname-text">사용자 정보를 불러오는 중...</div>
+    </div>
     <div style="display: flex; gap: 10px; align-items: center;">
-        <button onclick="handleLogout()" style="background: #95a5a6; color: white;">로그아웃</button>
+        <button onclick="handleLogout()" style="background: #95a5a6; color: white; padding: 10px 15px;">로그아웃</button>
         <a href="addRestaurant.html" class="btn-add">새 맛집 등록</a>
     </div>
-
 </div>
 
 <div class="control-panel">
     <div class="search-bar">
         <input type="text" id="searchInput" placeholder="가게 이름이나 카테고리를 검색해보세요...">
-        <button class="btn-main" onclick="handleSearch()">검색</button>
-        <button onclick="resetAll()" style="background:#95a5a6; color:white; padding:10px 15px;">초기화</button>
+        <button onclick="handleSearch()" style="background:#d35400; color:white; padding:10px 20px; border-radius:8px;">검색</button>
+        <button onclick="resetAll()" style="background:#95a5a6; color:white; padding:10px 15px; border-radius:8px;">초기화</button>
     </div>
-
     <div class="category-group" id="categoryGroup">
-        <span class="category-label">분류:</span>
+        <span style="font-size:13px; color:#7f8c8d; font-weight:bold;">분류:</span>
         <button class="btn-cat active" onclick="loadAll()">전체보기</button>
     </div>
 </div>
 
-<div id="restaurantList">
-    <p>데이터를 불러오는 중...</p>
-</div>
+<div id="restaurantList"></div>
 
 <script>
-    /* JS 영역 */
-    const BASE_URL = "http://localhost:8080/restaurant";
-    let allRestaurants = []; // 전체 데이터를 담아둘 변수
+    const BASE_URL = "http://localhost:8080";
+    let allRestaurants = [];
 
-    // 1. 데이터 로드 및 초기화
+    // 1. 초기 실행 (인증 확인 + 데이터 로드)
+    window.onload = async () => {
+        await checkUser(); // 닉네임 먼저 가져오기
+        await loadAll();   // 맛집 목록 가져오기
+    };
+
+    // 2. 사용자 닉네임 가져오기
+   async function checkUser() {
+    try {
+        const res = await fetch(`${BASE_URL}/api/users/nickname`);
+        if (res.ok) {
+            const data = await res.json();
+            // 텍스트 강조 및 이모지 변경
+            document.getElementById("nicknameArea").innerText = `🍲 ${data.nickname}님, 오늘도 맛있는 하루 되세요!`;
+        } else {
+            // 로그인 안 되어 있으면 쫓아내기
+            window.location.href = "login.html";
+        }
+    } catch (e) {
+        console.error("User Check Error:", e);
+    }
+}
+
+    // 3. 전체 맛집 로드
     async function loadAll() {
         try {
-            const res = await fetch(`${BASE_URL}/my`);
-            if (res.status === 401) return (window.location.href = "login.html");
+            const res = await fetch(`${BASE_URL}/restaurant/my`);
+            if (res.status === 401) return window.location.href = "login.html";
 
             allRestaurants = await res.json();
-
-            // 카테고리 버튼들 동적으로 업데이트
             updateCategoryButtons();
-            // 화면에 전체 리스트 렌더링
             render(allRestaurants);
-
-            // '전체보기' 버튼 활성화
-            document.querySelectorAll('.btn-cat').forEach(b => b.classList.remove('active'));
-            document.querySelector('.btn-cat').classList.add('active');
         } catch (e) {
-            console.error(e);
-            document.getElementById("restaurantList").innerHTML = "<p>서버 연결 실패!</p>";
+            document.getElementById("restaurantList").innerHTML = "<p>데이터 로드 실패!</p>";
         }
     }
 
-    // 2. 카테고리 버튼 동적 생성 (바베큐 등 새로운 카테고리 대응)
-    function updateCategoryButtons() {
-        const group = document.getElementById("categoryGroup");
-        // 현재 데이터에 존재하는 카테고리들만 추출 (중복 제거)
-        const categories = [...new Set(allRestaurants.map(r => r.category).filter(c => c))];
-
-        // 기존 버튼 유지(전체보기)하고 새 버튼들 추가
-        group.innerHTML = `<span class="category-label">분류:</span>
-                           <button class="btn-cat active" onclick="loadAll()">전체보기</button>`;
-
-        categories.forEach(cat => {
-            const btn = document.createElement("button");
-            btn.className = "btn-cat";
-            btn.innerText = cat;
-            btn.onclick = (e) => {
-                // 버튼 활성화 스타일 처리
-                document.querySelectorAll('.btn-cat').forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
-                filterByCategory(cat);
-            };
-            group.appendChild(btn);
-        });
-    }
-
-    // 3. 카테고리 필터링 (서버 요청)
-    async function filterByCategory(category) {
-        try {
-            const res = await fetch(`${BASE_URL}/category/${encodeURIComponent(category)}`);
-            const data = await res.json();
-            render(data, `'${category}' 카테고리가 비어있습니다.`);
-        } catch (e) { console.error(e); }
-    }
-
-    // 4. 이름 검색 (서버 요청)
-    async function handleSearch() {
-        const keyword = document.getElementById("searchInput").value.trim();
-        if (!keyword) return loadAll();
-
-        try {
-            const res = await fetch(`${BASE_URL}/search?keyword=${encodeURIComponent(keyword)}`);
-            const data = await res.json();
-            render(data, `'${keyword}' 검색 결과가 없습니다.`);
-        } catch (e) { console.error(e); }
-    }
-
-    // 5. 화면 그리기 (공통)
+    // 4. 화면 그리트 (렌더링)
     function render(list, emptyMsg = "등록된 맛집이 없습니다.") {
         const container = document.getElementById("restaurantList");
         container.innerHTML = "";
 
         if (list.length === 0) {
-            container.innerHTML = `<p style="grid-column: 1/-1; text-align:center; padding:50px;">${emptyMsg}</p>`;
+            container.innerHTML = `<p style="grid-column: 1/-1; text-align:center; padding:50px; color:#95a5a6;">${emptyMsg}</p>`;
             return;
         }
 
         list.forEach(r => {
             const card = document.createElement("div");
             card.className = "restaurant-card";
-            const name = r.name || r.restaurantName;
-            const img = r.imagePath || r.imgUrl;
+            const img = r.imgUrl || r.imagePath;
 
             card.innerHTML = `
-                <h3>${name} <span class="cat-tag">${r.category || '기타'}</span></h3>
+                <h3>${r.name || r.restaurantName} <span class="cat-tag">${r.category || '기타'}</span></h3>
                 <div class="info">📍 ${r.location || '위치 정보 없음'}</div>
-                <div class="info rating">⭐ ${r.rating.toFixed(1)} / 5.0</div>
-                <div class="info" style="margin-top:10px;">"${r.review || '리뷰가 없습니다.'}"</div>
-                ${img ? `<img src="http://localhost:8080${img}" alt="맛집">` : `<div style="height:200px; background:#f0f0f0; border-radius:8px; margin:15px 0; display:flex; align-items:center; justify-content:center; color:#ccc;">이미지 없음</div>`}
+                <div class="info rating">⭐ ${r.rating ? r.rating.toFixed(1) : '0.0'} / 5.0</div>
+                <div class="review-text">"${r.review || '리뷰가 없습니다.'}"</div>
+
+                ${img ? `<img src="${BASE_URL}${img}" class="card-img">` : `<div class="no-image-box">📷 이미지 없음</div>`}
+
                 <div class="btn-group">
                     <button class="btn-edit" onclick="location.href='updaterestaurant.html?id=${r.id}'">수정</button>
                     <button class="btn-del" onclick="deleteRes(${r.id})">삭제</button>
@@ -172,47 +157,50 @@
         });
     }
 
-    // 6. 삭제
+    // (나머지 카테고리, 검색, 로그아웃 기능 동일)
+    function updateCategoryButtons() {
+        const group = document.getElementById("categoryGroup");
+        const categories = [...new Set(allRestaurants.map(r => r.category).filter(c => c))];
+        group.innerHTML = `<span style="font-size:13px; color:#7f8c8d; font-weight:bold;">분류:</span><button class="btn-cat active" onclick="loadAll()">전체보기</button>`;
+        categories.forEach(cat => {
+            const btn = document.createElement("button");
+            btn.className = "btn-cat";
+            btn.innerText = cat;
+            btn.onclick = (e) => {
+                document.querySelectorAll('.btn-cat').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                filterByCategory(cat);
+            };
+            group.appendChild(btn);
+        });
+    }
+
+    async function filterByCategory(category) {
+        const res = await fetch(`${BASE_URL}/restaurant/category/${encodeURIComponent(category)}`);
+        const data = await res.json();
+        render(data);
+    }
+
+    async function handleSearch() {
+        const kw = document.getElementById("searchInput").value;
+        const res = await fetch(`${BASE_URL}/restaurant/search?keyword=${encodeURIComponent(kw)}`);
+        const data = await res.json();
+        render(data, "검색 결과가 없습니다.");
+    }
+
     async function deleteRes(id) {
         if (!confirm("정말 삭제할까요?")) return;
-        const res = await fetch(`${BASE_URL}/${id}`, { method: "DELETE" });
-        if (res.ok) { alert("삭제 완료!"); loadAll(); }
+        const res = await fetch(`${BASE_URL}/restaurant/${id}`, { method: "DELETE" });
+        if (res.ok) loadAll();
     }
-    // 7. 로그아웃
+
     async function handleLogout() {
-    if (!confirm("로그아웃 하시겠습니까?")) return;
-
-    try {
-        const res = await fetch("http://localhost:8080/api/users/logout", {
-            method: "POST" // 보안을 위해 POST 방식을 권장합니다.
-        });
-
-        if (res.ok) {
-            alert("성공적으로 로그아웃되었습니다.");
-            // 로그인 페이지로 이동
-            window.location.href = "login.html";
-        } else {
-            alert("로그아웃 처리 중 오류가 발생했습니다.");
-        }
-    } catch (error) {
-        console.error("Logout Error:", error);
-        alert("서버와 통신할 수 없습니다.");
-    }
-}
-
-    function resetAll() {
-        document.getElementById("searchInput").value = "";
-        loadAll();
+        if (!confirm("로그아웃 하시겠습니까?")) return;
+        const res = await fetch(`${BASE_URL}/api/users/logout`, { method: "POST" });
+        if (res.ok) window.location.href = "login.html";
     }
 
-    // 엔터키 지원
-    document.getElementById("searchInput").addEventListener("keypress", (e) => {
-        if (e.key === "Enter") handleSearch();
-    });
-
-    // 시작 시 전체 로드
-    window.onload = loadAll;
+    function resetAll() { document.getElementById("searchInput").value = ""; loadAll(); }
 </script>
-
 </body>
 </html>

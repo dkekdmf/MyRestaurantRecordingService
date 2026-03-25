@@ -2,75 +2,172 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>로그인</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 - 나의 맛집 기록</title>
     <style>
+        /* 기본 스타일 */
         body {
-          font-family: Arial, sans-serif;
-          background: #f0f0f0;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 100vh;
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
-        .container {
-          background: #fff;
-          padding: 30px;
-          border-radius: 10px;
-          box-shadow: 0 0 10px #ccc;
-          width: 300px;
+
+        /* 로그인 카드 박스 */
+        .login-container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 400px;
         }
+
         h2 {
-          text-align: center;
-          color: #2980b9;
+            text-align: center;
+            color: #d35400;
+            margin-bottom: 30px;
+            font-size: 24px;
         }
-        input {
-          width: 100%;
-          padding: 10px;
-          margin: 8px 0;
-          border: 1px solid #ddd;
-          border-radius: 5px;
+
+        /* 입력창 스타일 */
+        .input-group {
+            margin-bottom: 20px;
         }
-        button {
-          width: 100%;
-          padding: 10px;
-          background: #2980b9;
-          color: white;
-          border: none;
-          border-radius: 5px;
-          cursor: pointer;
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #495057;
+            font-weight: 600;
         }
-        button:hover {
-          background: #3498db;
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #e67e22;
+        }
+
+        /* 버튼 스타일 */
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-login:hover {
+            background-color: #d35400;
+        }
+
+        /* 회원가입 안내 영역 */
+        .signup-prompt {
+            margin-top: 25px;
+            text-align: center;
+            font-size: 14px;
+            color: #868e96;
+            border-top: 1px solid #f1f3f5;
+            padding-top: 20px;
+        }
+
+        .signup-prompt a {
+            color: #e67e22;
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
+        .signup-prompt a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <h2>로그인</h2>
-    <form id="loginForm">
-        <input type="text" id="username" placeholder="아이디" required />
-        <input type="password" id="password" placeholder="비밀번호" required />
-        <button type="submit">로그인</button>
-    </form>
+
+<div class="login-container">
+    <h2>🍴 맛집 기록 로그인</h2>
+
+    <div class="input-group">
+        <label for="username">아이디</label>
+        <input type="text" id="username" placeholder="아이디를 입력하세요">
+    </div>
+
+    <div class="input-group">
+        <label for="password">비밀번호</label>
+        <input type="password" id="password" placeholder="비밀번호를 입력하세요">
+    </div>
+
+    <button class="btn-login" onclick="handleLogin()">로그인</button>
+
+    <div class="signup-prompt">
+        아직 회원이 아니신가요?
+        <a href="signup.html">회원가입하기</a>
+    </div>
 </div>
 
 <script>
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const user = {
-        username: document.getElementById("username").value,
-        password: document.getElementById("password").value
-      };
-      const res = await fetch("http://localhost:8080/api/users/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(user)
-      });
-      alert(await res.text());
-      if (res.ok) {
-        window.location.href = "/addRestaurant.html";
-      }
+    async function handleLogin() {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        if (!username || !password) {
+            alert("아이디와 비밀번호를 모두 입력해주세요.");
+            return;
+        }
+
+        try {
+            // 수정된 백엔드 주소 반영 (/api/users/login)
+            const response = await fetch("http://localhost:8080/api/users/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            });
+
+            if (response.ok) {
+                // 로그인 성공 시 맛집 목록 페이지로 이동
+                alert("반갑습니다!");
+                window.location.href = "addRestaurant.html";
+            } else {
+                // 서버에서 보낸 에러 메시지 확인
+                const errorMsg = await response.text();
+                alert(errorMsg || "로그인에 실패했습니다.");
+            }
+        } catch (error) {
+            console.error("Login Error:", error);
+            alert("서버와 연결할 수 없습니다.");
+        }
+    }
+
+    // 엔터 키 지원
+    document.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            handleLogin();
+        }
     });
 </script>
+
 </body>
 </html>

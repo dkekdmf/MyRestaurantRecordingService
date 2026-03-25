@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +32,9 @@ public class UserContorller {
     }
     @PostMapping("/signup")
     public ResponseEntity<String>signup (@RequestBody UserDto.UserSignupRequest request){
+        if(userRepository.findByUsername(request.username()).isPresent()){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("이미 사용중인 계정입니다.");
+        }
         User user = User.builder()
                 .username(request.username())
                 .nickname(request.nickname())
@@ -52,30 +56,49 @@ public class UserContorller {
     }
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody Map<String, String> request, HttpSession session) {
-        String username = request.get("username");
-        String password = request.get("password");
+        try {
+            String username = request.get("username");
+            String password = request.get("password");
 
-        User user = userRepository.findByUsername(username).orElse(null);
+            User user = userRepository.findByUsername(username).orElse(null);
 
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("존재하지 않는 사용자입니다.");
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("존재하지 않는 사용자입니다.");
+            }
+
+            if (!passwordEncoder.matches(password, user.getPassword())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("비밀번호가 틀렸습니다.");
+            }
+            // 세션 저장 시 데이터가 null인지 확인
+            if (user.getId() == null || user.getNickname() == null) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("사용자 정보(ID/닉네임)가 누락되었습니다.");
+            }
+            session.setAttribute("userId", user.getId());
+            session.setAttribute("userNickname", user.getNickname());
+
+            return ResponseEntity.ok("로그인 성공");
+        }catch (Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("사용자 id/닉네임 누락");
         }
 
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("비밀번호가 틀렸습니다.");
-        }
-        session.setAttribute("userId",user.getId());
-        session.setAttribute("userNickname",user.getNickname());
-
-        return ResponseEntity.ok("로그인 성공");
     }
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpSession session){
         //세션을 무효화
         session.invalidate();;
         return ResponseEntity.ok("로그아웃 되었습니다.");
+    }
+    @GetMapping("/nickname")
+    public ResponseEntity<?> getUserNickname(HttpSession session){
+        String nickname = (String) session.getAttribute("userNickname");
+
+        if(nickname == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+        return ResponseEntity.ok(Collections.singletonMap("nickname",nickname));
     }
 
 
