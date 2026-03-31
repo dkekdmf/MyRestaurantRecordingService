@@ -34,6 +34,8 @@ public class Restaurant {
     @ManyToOne //다대일 관계
     @JoinColumn(name = "user_id") // 외래키설정
     private User user;
+    private Double latitude; // 위도 Double형식으로 반환(소수점)
+    private Double longitude; // 경도 Double형식으로 반환(소수점)
 
 
 }

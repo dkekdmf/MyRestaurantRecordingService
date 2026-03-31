@@ -8,9 +8,6 @@ import jakarta.persistence.GenerationType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
-import org.springframework.boot.jdbc.DataSourceBuilder;
-
-import javax.sql.DataSource;
 
 
 @Entity
@@ -29,7 +26,7 @@ public class User {
     private String nickname;
 
 
-
+    // Lombok Getter,Setter 사용x 연습하기 위해
     public Long getId(){
         return id;
     }

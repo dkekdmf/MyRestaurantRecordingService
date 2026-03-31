@@ -12,7 +12,7 @@ public class Appconfig {
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
-    }
+    } // 다른 클래스에서 사용가능할 수 있게,
 
 
 

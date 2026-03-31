@@ -1,12 +1,11 @@
 package com.example.jaehoon.MyRestaurantRecord.repository;
 
 import com.example.jaehoon.MyRestaurantRecord.entity.Restaurant;
-import jakarta.persistence.Entity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface RestaurantRepository extends JpaRepository<Restaurant,Long> {
+public interface RestaurantRepository extends JpaRepository<Restaurant,Long> { //jpa 사용 (객체, 기본키타입)
     List<Restaurant> findByUserId(Long userId);
     List<Restaurant> findByUserIdAndCategory(Long userId, String category);
     //가게 이름에 특정 키워드가 포함된 결과를 검색, Containg키워드를사용(LIKE 쿼리)
