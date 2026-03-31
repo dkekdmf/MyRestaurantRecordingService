@@ -124,7 +124,7 @@ public class RestaurantController {
 
             return ResponseEntity.ok("맛집 수정 및 이미지 업로드 성공!");
 
-        } catch (RuntimeException e) {
+        } catch (BusinessException e) {
             // 권한 없음 등 비즈니스 로직 에러 처리
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         } catch (Exception e) {
