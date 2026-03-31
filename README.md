@@ -38,9 +38,9 @@
 ### 1. 사용자 인증 및 개인화 서비스
 * 회원가입 및 로그인 시스템을 통해 사용자별로 맛집 리스트를 관리할 수 있습니다.
 
-| 회원가입 화면 | 로그인 화면 |
-| :---: | :---: |
-| <img src="./images/signup.png" width="400"> | <img src="./images/login.png" width="419"> |
+|                  회원가입 화면                  |                  로그인 화면                  |
+|:-----------------------------------------:|:----------------------------------------:|
+| <img src="MyRestaurantRecord/images/signup.png" width="400"> | <img src="MyRestaurantRecord/images/login.png" width="419"> |
 
 * BCrypt 암호화: 비밀번호는 해시 함수로 암호화되어 안전하게 저장됩니다.
 * Http 세션 관리: 로그인한 사용자만 본인의 기록에 접근할 수 있도록 http 세션을 통해 인증을 관리합니다.
