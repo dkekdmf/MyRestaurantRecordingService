@@ -2,113 +2,218 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>맛집 기록 수정</title>
+    <title>맛집 기록 수정 - 키워드 검색 연동</title>
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=655e92924881d57842b2e26e067c05ef&libraries=services"></script>
     <style>
-        body {
-          font-family: Arial, sans-serif;
-          background: #f9f9f9;
-        }
+        body { font-family: 'Pretendard', sans-serif; padding: 20px; background: #f4f4f4; }
+        .container { max-width: 550px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; margin-bottom: 25px; }
+        label { display: block; margin-top: 15px; font-weight: bold; color: #333; }
+        input, textarea, button { width: 100%; padding: 12px; margin-top: 8px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 8px; outline: none; }
 
-        .container {
-          max-width: 500px;
-          margin: 80px auto;
-          padding: 30px;
-          background: white;
-          border-radius: 10px;
-          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
+        .search-container { display: flex; gap: 8px; align-items: flex-end; }
+        .search-container input { flex: 1; }
+        .btn-search { width: 80px; background: #d35400; color: white; margin-top: 8px; padding: 12px; font-size: 14px; border: none; cursor: pointer; }
+        .btn-search:hover { background: #e67e22; }
 
-        h1 {
-          text-align: center;
-          margin-bottom: 20px;
-        }
+        button[type="submit"] { background: #007bff; color: white; border: none; cursor: pointer; margin-top: 20px; font-weight: bold; font-size: 16px; }
+        button[type="submit"]:hover { background: #0056b3; }
+        .btn-list { background: #6c757d; margin-top: 10px; color: white; border: none; cursor: pointer; }
 
-        label {
-          display: block;
-          margin-top: 10px;
-          font-weight: bold;
-        }
-
-        input, textarea {
-          width: 100%;
-          padding: 12px;
-          margin-top: 5px;
-          border: 1px solid #ccc;
-          border-radius: 6px;
-        }
-
-        button {
-          width: 100%;
-          padding: 12px;
-          margin-top: 20px;
-          background: #007bff;
-          color: white;
-          border: none;
-          border-radius: 6px;
-          cursor: pointer;
-        }
-
-        button:hover {
-          background: #0056b3;
-        }
-
-        .message {
-          margin-top: 15px;
-          text-align: center;
-          font-weight: bold;
-          color: green;
-        }
+        #previewImg { max-width: 100%; margin-top: 10px; border-radius: 8px; display: block; }
+        #map { width: 100%; height: 300px; margin-top: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .info-msg { font-size: 12px; color: #666; margin-top: 5px; }
     </style>
 </head>
 <body>
+
 <div class="container">
-    <h1>맛집 기록 수정</h1>
+    <h1>📝 맛집 정보 수정</h1>
     <form id="updateForm">
-        <input type="hidden" id="id" name="id" value="1"> <!-- 수정할 맛집 ID -->
+        <input type="hidden" id="id">
 
         <label for="name">맛집 이름</label>
-        <input type="text" id="name" name="name" value="기존 이름" required>
+        <input type="text" id="name" required>
 
-        <label for="location">위치</label>
-        <input type="text" id="location" name="location" value="기존 위치" required>
+        <label for="location">위치 수정 (가게 이름이나 주소)</label>
+        <div class="search-container">
+            <input type="text" id="location" placeholder="검색어로 위치를 수정하세요" required>
+            <button type="button" class="btn-search" onclick="searchByKeyword()">검색</button>
+        </div>
+        <p class="info-msg">* 위치가 바뀌었다면 검색 버튼을 눌러 지도에 반영해주세요.</p>
 
-        <label for="description">설명</label>
-        <textarea id="description" name="description" rows="4">기존 설명</textarea>
+        <div id="map"></div>
 
-        <button type="submit">수정하기</button>
+        <input type="hidden" id="latitude">
+        <input type="hidden" id="longitude">
+
+        <label for="category">카테고리</label>
+        <input type="text" id="category">
+
+        <label for="rating">평점 (0~5)</label>
+        <input type="number" id="rating" step="0.1" min="0" max="5">
+
+        <label for="visitDate">방문일</label>
+        <input type="date" id="visitDate">
+
+        <label for="review">리뷰</label>
+        <textarea id="review" rows="3"></textarea>
+
+        <label for="imageFile">사진 교체 (선택)</label>
+        <input type="file" id="imageFile" accept="image/*">
+        <img id="previewImg" src="" alt="이미지 미리보기">
+
+        <button type="submit">수정 완료</button>
+        <button type="button" class="btn-list" onclick="goToList()">취소하고 돌아가기</button>
     </form>
-    <div class="message" id="message"></div>
 </div>
 
 <script>
-    document.getElementById("updateForm").addEventListener("submit", async function(event) {
-      event.preventDefault(); // 기본 폼 제출 막기
+    // URL에서 ID 추출
+    const urlParams = new URLSearchParams(window.location.search);
+    const restaurantId = urlParams.get('id');
+    const API_BASE_URL = `http://localhost:8080/restaurant/${restaurantId}`;
 
-      const data = {
-        id: document.getElementById("id").value,
+    // 카카오맵
+    var mapContainer = document.getElementById('map'),
+        mapOption = {
+            center: new kakao.maps.LatLng(37.56682, 126.9786),
+            level: 3
+        };
+
+    var map = new kakao.maps.Map(mapContainer, mapOption);
+    var ps = new kakao.maps.services.Places();
+    var geocoder = new kakao.maps.services.Geocoder();
+    var marker = new kakao.maps.Marker({ map: map });
+    var infowindow = new kakao.maps.InfoWindow({ zIndex: 1 });
+
+    // 기존 데이터 불러오기
+    async function loadData() {
+        if (!restaurantId) {
+            alert("ID가 없습니다.");
+            return;
+        }
+
+        try {
+            const res = await fetch(API_BASE_URL);
+            if (res.ok) {
+                const data = await res.json();
+
+                // 데이터 매핑
+                document.getElementById("name").value = data.name;
+                document.getElementById("location").value = data.location;
+                document.getElementById("latitude").value = data.latitude;
+                document.getElementById("longitude").value = data.longitude;
+                document.getElementById("category").value = data.category || "";
+                document.getElementById("rating").value = data.rating || 5.0;
+                document.getElementById("review").value = data.review || "";
+                document.getElementById("visitDate").value = data.visitDate || "";
+
+                // 기존 이미지 표시
+                if (data.imageUrl) {
+                    document.getElementById("previewImg").src = data.imageUrl; // 서버 경로에 맞춰 수정 필요
+                }
+
+                // 지도 위치 설정
+                if (data.latitude && data.longitude) {
+                    var coords = new kakao.maps.LatLng(data.latitude, data.longitude);
+                    map.setCenter(coords);
+                    marker.setPosition(coords);
+                    infowindow.setContent('<div style="padding:5px;font-size:12px;">' + data.name + '</div>');
+                    infowindow.open(map, marker);
+                }
+            }
+        } catch (e) {
+            console.error("로드 실패", e);
+        }
+    }
+    loadData();
+
+    // 키워드 검색 함수
+    function searchByKeyword() {
+        var keyword = document.getElementById('location').value;
+        if (!keyword.trim()) {
+            alert("검색어를 입력해주세요!");
+            return;
+        }
+
+        ps.keywordSearch(keyword, function(data, status) {
+            if (status === kakao.maps.services.Status.OK) {
+                var place = data[0];
+                var coords = new kakao.maps.LatLng(place.y, place.x);
+
+                map.setCenter(coords);
+                marker.setPosition(coords);
+                infowindow.setContent('<div style="padding:5px;font-size:12px;">' + place.place_name + '</div>');
+                infowindow.open(map, marker);
+
+                document.getElementById('location').value = place.road_address_name || place.address_name;
+                document.getElementById('latitude').value = place.y;
+                document.getElementById('longitude').value = place.x;
+            } else {
+                alert("결과가 없습니다.");
+            }
+        });
+    }
+
+    // 이미지 미리보기
+    document.getElementById("imageFile").addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = document.getElementById("previewImg");
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // 수정 데이터 전송
+    document.getElementById("updateForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData();
+      const updatedData = {
         name: document.getElementById("name").value,
         location: document.getElementById("location").value,
-        description: document.getElementById("description").value
+        latitude: document.getElementById("latitude").value,
+        longitude: document.getElementById("longitude").value,
+        category: document.getElementById("category").value,
+        rating: document.getElementById("rating").value,
+        review: document.getElementById("review").value,
+        visitDate: document.getElementById("visitDate").value
       };
 
+      formData.append("restaurant", new Blob([JSON.stringify(updatedData)], {
+        type: "application/json"
+      }));
+
+      const fileInput = document.getElementById("imageFile");
+      if (fileInput.files[0]) {
+        formData.append("image", fileInput.files[0]);
+      }
+
       try {
-        const response = await fetch("/restaurants/update", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
+        const res = await fetch(API_BASE_URL, {
+          method: "PUT",
+          body: formData
         });
 
-        if (response.ok) {
-          document.getElementById("message").textContent = "맛집 기록이 성공적으로 수정되었습니다!";
+        if (res.ok) {
+          alert("성공적으로 수정되었습니다!");
+          window.location.href = "restaurant.html";
         } else {
-          document.getElementById("message").textContent = "수정 실패: 서버 오류";
-          document.getElementById("message").style.color = "red";
+          alert("수정 실패: " + (await res.text()));
         }
       } catch (error) {
-        document.getElementById("message").textContent = "네트워크 오류 발생";
-        document.getElementById("message").style.color = "red";
+        alert("서버 연결 실패");
       }
     });
+
+    function goToList() {
+      window.location.href = "restaurant.html";
+    }
 </script>
 </body>
 </html>

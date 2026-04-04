@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>로그인</title>
+    <style>
+        body {
+          font-family: 'Malgun Gothic', sans-serif;
+          background: #f0f0f0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          margin: 0;
+        }
+        .container {
+          background: #fff;
+          padding: 30px;
+          border-radius: 10px;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+          width: 300px;
+          text-align: center;
+        }
+        h2 {
+          color: #2980b9;
+          margin-bottom: 20px;
+        }
+        input {
+          width: 100%;
+          padding: 10px;
+          margin: 8px 0;
+          border: 1px solid #ddd;
+          border-radius: 5px;
+          box-sizing: border-box;
+        }
+        button {
+          width: 100%;
+          padding: 10px;
+          background: #2980b9;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          font-weight: bold;
+          margin-top: 10px;
+        }
+        button:hover {
+          background: #3498db;
+        }
+        /* 회원가입 유도 문구 스타일 */
+        .signup-link {
+          margin-top: 20px;
+          font-size: 14px;
+          color: #666;
+        }
+        .signup-link a {
+          color: #2980b9;
+          text-decoration: none;
+          font-weight: bold;
+        }
+        .signup-link a:hover {
+          text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>로그인</h2>
+    <form id="loginForm">
+        <input type="text" id="username" placeholder="아이디" required />
+        <input type="password" id="password" placeholder="비밀번호" required />
+        <button type="submit">로그인</button>
+    </form>
+
+    <div class="signup-link">
+        계정이 없으신가요? <a href="signup.html">회원가입하기</a>
+    </div>
+</div>
+
+<script>
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const user = {
+        username: document.getElementById("username").value,
+        password: document.getElementById("password").value
+      };
+
+      try {
+        const res = await fetch("http://localhost:8080/api/users/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(user)
+        });
+
+        if (res.ok) {
+          alert("로그인 성공!");
+          window.location.href = "/addRestaurant.html";
+        } else {
+          const errorMsg = await res.text();
+          alert("로그인 실패: " + errorMsg);
+        }
+      } catch (err) {
+        alert("서버 연결에 실패했습니다.");
+      }
+    });
+</script>
+</body>
+</html>
